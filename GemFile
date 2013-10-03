@@ -1,0 +1,12 @@
+source "http://rubygems.org"
+
+# Testing
+gem 'rspec'
+gem 'simplecov'
+
+# Game Framework
+gem 'gosu'
+gem 'chingu'
+
+# Movement
+#gem "steering_behaviors", "~> 2.0.0"
