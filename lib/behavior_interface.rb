@@ -9,8 +9,11 @@ module BehaviorInterface
   attr_accessor :max_speed
 
   @position = Vector2d.new(0,0)
-  @velocity = Vector2d.new(0,0)
   @heading = Vector2d.new(0,0)
   @speed = 0
+  @mass = 10
+
+  @velocity = Vector2d.new(0,0)
+
   @max_speed = 100
 end

@@ -25,7 +25,7 @@ class Behaviors
 
   # Calculate the steering force acting on the agent
   def force
-    force = 0
+    force = Vector2d.new(0,0)
 
     unless @active_behaviors[:flee].nil? || @active_behaviors[:flee]==:none
       force += velocity_change_for_fleeing(@active_behaviors[:flee])

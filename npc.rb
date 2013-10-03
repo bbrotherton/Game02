@@ -17,6 +17,14 @@ class Npc < GameObject
   trait :bounding_box
   traits :velocity, :collision_detection
 
+
+  # Simple data points
+  attr_accessor :position, :heading, :speed
+  # Complex data points
+  attr_accessor :velocity
+  # Limits
+  attr_accessor :max_speed
+
   def setup
     @id = SecureRandom.uuid
 
@@ -29,8 +37,16 @@ class Npc < GameObject
     self.factor = 0.5
     self.rotation_center = :center
 
-    self.max_velocity_x = rand * 5
-    self.max_velocity_y = rand * 5
+    @position = Vector2d.new(0,0)
+    @heading = Vector2d.new(0,0)
+    @speed = 0
+    @mass = 10
+
+    @velocity = Vector2d.new(0,0)
+
+    @max_speed = 1
+    @max_force = 50
+    @max_turn_rate = 60
 
     @steering = Behaviors.new(self)
     @steering.add_behavior(:flee, Vector2d.new(@x,@y))
@@ -43,32 +59,36 @@ class Npc < GameObject
     ms_since_last_update = current_time_in_ms - (@last_time || 0)
     @last_time = current_time_in_ms
 
-    @accel = @steering.force / @mass
-    @accel.truncate!(@max_force)
+    acceleration = @steering.force / @mass
+    acceleration.truncate!(@max_force)
 
     rads = Math::PI / 180
-    new_velocity = @vel + @accel * elapsed_t
+    new_velocity = @velocity + acceleration * ms_since_last_update
     @angle = Vector2d.angle(@heading, new_velocity) * rads
-    max_angle = @max_turn_rate * rads * elapsed_t
+    max_angle = @max_turn_rate * rads * ms_since_last_update
 
     if @angle.abs > max_angle
       sign = Vector2d.sign(@heading, new_velocity)
       corrected_angle = @heading.radians + max_angle * sign
-      @vel.x = Math.sin(corrected_angle) * new_velocity.length
-      @vel.y = - Math.cos(corrected_angle) * new_velocity.length
+      @velocity.x = Math.sin(corrected_angle) * new_velocity.length
+      @velocity.y = - Math.cos(corrected_angle) * new_velocity.length
     else
-      @vel = new_velocity
+      @velocity = new_velocity
     end
 
-    @vel.truncate!(@max_speed)
-    @pos += @vel * elapsed_t
+    @velocity.truncate!(@max_speed)
+    @position += @velocity * ms_since_last_update
 
-    if @vel.length_sq > 0.0001
-      @heading = @vel.normalize
+    if @velocity.length_sq > 0.0001
+      @heading = @velocity.normalize
     end
 
     #list_nearby_npcs
     manage_collision_highlight
+
+    self.velocity_x = @velocity.x
+    self.velocity_y = @velocity.y
+    self.angle = @heading.angle
   end
 
   def manage_collision_highlight
