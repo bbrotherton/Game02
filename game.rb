@@ -1,9 +1,5 @@
 require 'rubygems' rescue nil
 
-# Add our lib directory to the load path
-lib_dir = File.expand_path(File.join(File.dirname(__FILE__), 'lib'))
-$LOAD_PATH.unshift(lib_dir)
-
 require 'chingu'
 include Gosu
 include Chingu
@@ -12,6 +8,12 @@ require_relative 'npc'
 require_relative 'player'
 
 class Game < Chingu::Window
+  @debug = true
+  class << self
+    attr_accessor :debug
+  end
+
+
   def initialize
     super(800,600)
     self.input = {:esc => :exit}
@@ -21,11 +23,12 @@ class Game < Chingu::Window
     @blue = Color.new(0xFF0000FF)
 
     self.factor = 1
-    10.times { Npc.create(:x => width/(rand * 10), :y => height/(rand * 10)) }
+    25.times { Npc.create(:x => width/(rand * 10), :y => height/(rand * 10)) }
     1.times { Player.create(:x => width/3, :y => height/3) }
 
     Npc.all.each do |e|
-      puts e
+      puts "e: #{e}"
+      puts "#{e.steering.active_behaviors}"
     end
   end
 

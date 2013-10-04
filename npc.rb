@@ -1,27 +1,19 @@
-# Add our lib directory to the load path
-lib_dir = File.expand_path(File.join(File.dirname(__FILE__), 'lib'))
-$LOAD_PATH.unshift(lib_dir)
-
 require 'gosu'
 require 'securerandom'
 
-require 'vector2d'
-require 'behaviors'
-require 'behavior_interface'
+require_relative 'lib/vector2d'
+require_relative 'lib/behaviors'
 
 class Npc < GameObject
-  include BehaviorInterface
-
   attr_reader :id
+  attr_reader :steering   # for debugging
 
   trait :bounding_box
   traits :velocity, :collision_detection
 
 
   # Simple data points
-  attr_accessor :position, :heading, :speed
-  # Complex data points
-  attr_accessor :velocity
+  attr_accessor :heading, :speed
   # Limits
   attr_accessor :max_speed
 
@@ -34,60 +26,87 @@ class Npc < GameObject
     @image = Image["Starfighter.bmp"]
     @ouched = false
 
-    self.factor = 0.5
+    self.factor = 0.7
     self.rotation_center = :center
 
-    @position = Vector2d.new(0,0)
     @heading = Vector2d.new(0,0)
     @speed = 0
     @mass = 10
 
-    @velocity = Vector2d.new(0,0)
-
     @max_speed = 1
-    @max_force = 50
-    @max_turn_rate = 60
+    @max_force = 5
+    @max_turn_rate = 1
 
     @steering = Behaviors.new(self)
-    @steering.add_behavior(:flee, Vector2d.new(@x,@y))
+    @steering.add_behavior(:avoid_edges)
+    @steering.add_behavior(:flee, Vector2d.new(@x+(rand*100-51),@y+(rand*100-51)))
 
     cache_bounding_box
   end
 
+  def position
+    Vector2d.new(self.x, self.y)
+  end
+  def velocity
+    Vector2d.new(self.velocity_x, self.velocity_y)
+  end
+
   def update
+    if @change_point.nil?
+      @change_point = rand*60
+    end
+    @counter = 1 + (@counter || 1)
+    if @counter >= @change_point
+      @counter = 1
+      @change_point = rand*60
+      @steering.add_behavior(:flee, Vector2d.new(@x+(rand*100-51),@y+(rand*100-51)))
+    end
+
+    elapsed_ms = ms_since_last_update
+    adjust_velocity_and_heading elapsed_ms
+
+    #list_nearby_npcs
+    manage_collision_highlight
+  end
+
+  def ms_since_last_update
     current_time_in_ms = Gosu::milliseconds
     ms_since_last_update = current_time_in_ms - (@last_time || 0)
     @last_time = current_time_in_ms
 
+    ms_since_last_update / 4
+  end
+
+  def adjust_velocity_and_heading(elapsed_ms)
     acceleration = @steering.force / @mass
     acceleration.truncate!(@max_force)
 
     rads = Math::PI / 180
-    new_velocity = @velocity + acceleration * ms_since_last_update
-    @angle = Vector2d.angle(@heading, new_velocity) * rads
-    max_angle = @max_turn_rate * rads * ms_since_last_update
 
-    if @angle.abs > max_angle
+    new_velocity = self.velocity + acceleration * elapsed_ms
+    angle = Vector2d.angle(@heading, new_velocity) * rads
+    max_angle = @max_turn_rate * rads * elapsed_ms
+
+    if angle.abs > max_angle
       sign = Vector2d.sign(@heading, new_velocity)
       corrected_angle = @heading.radians + max_angle * sign
-      @velocity.x = Math.sin(corrected_angle) * new_velocity.length
-      @velocity.y = - Math.cos(corrected_angle) * new_velocity.length
-    else
-      @velocity = new_velocity
+
+      vlen = new_velocity.length
+      new_velocity.x = Math.sin(corrected_angle) * vlen
+      new_velocity.y = - Math.cos(corrected_angle) * vlen
     end
 
-    @velocity.truncate!(@max_speed)
-    @position += @velocity * ms_since_last_update
+    new_velocity.truncate!(@max_speed)
+    new_position = self.position + new_velocity * elapsed_ms
 
-    if @velocity.length_sq > 0.0001
-      @heading = @velocity.normalize
+    if new_velocity.length_sq > 0.0001
+      @heading = new_velocity.normalize
     end
 
-    #list_nearby_npcs
-    manage_collision_highlight
-
-    self.velocity_x = @velocity.x
-    self.velocity_y = @velocity.y
+    self.x = new_position.x
+    self.y = new_position.y
+    self.velocity_x = new_velocity.x
+    self.velocity_y = new_velocity.y
     self.angle = @heading.angle
   end
 
