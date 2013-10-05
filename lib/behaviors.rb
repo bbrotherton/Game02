@@ -1,5 +1,7 @@
 
-POSSIBLE_BEHAVIORS = {:flee => :target_place, :avoid_edges => :none}
+POSSIBLE_BEHAVIORS = {:flee => :target_place,
+                      :seek => :target_place,
+                      :avoid_edges => :none}
 
 
 class Behaviors
@@ -21,6 +23,12 @@ class Behaviors
   # Flee from a target location
   def velocity_change_to_flee(target_place)
     desired_velocity = (@actor.position - target_place).normalize * @actor.max_speed
+    desired_velocity - @actor.velocity
+  end
+
+  # Seek a target location
+  def velocity_change_to_seek(target_place)
+    desired_velocity = (target_place - @actor.position).normalize * @actor.max_speed
     desired_velocity - @actor.velocity
   end
 
@@ -50,8 +58,12 @@ class Behaviors
   def force
     force = Vector2d.new(0,0)
 
-    unless @active_behaviors[:flee].nil? && @active_behaviors[:flee]==:none
+    if (not @active_behaviors[:flee].nil?) && @active_behaviors[:flee]!=:none
       force += velocity_change_to_flee(@active_behaviors[:flee])
+    end
+
+    if (not @active_behaviors[:seek].nil?) && @active_behaviors[:seek]!=:none
+      force += velocity_change_to_seek(@active_behaviors[:seek])
     end
 
     unless @active_behaviors[:avoid_edges].nil?

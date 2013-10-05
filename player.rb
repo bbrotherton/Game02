@@ -3,9 +3,6 @@ class Player < GameObject
   traits :velocity, :collision_detection
 
   def setup
-    @blue = Color.new(0xFF0000FF)
-    @red = Color.new(0xFFFF0000)
-
     @image = Image["circle.png"]
 #    self.velocity_x = rand * 5
 #    self.velocity_y = rand * 5
@@ -36,9 +33,9 @@ class Player < GameObject
     @ouched = false if @ouched == true
 
     if @ouched
-      self.color = @red
+      self.color = COLORS[:red]
     else
-      self.color = @blue
+      self.color = COLORS[:green]
     end
   end
 

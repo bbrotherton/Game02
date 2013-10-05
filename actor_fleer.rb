@@ -4,7 +4,7 @@ require 'securerandom'
 require_relative 'lib/vector2d'
 require_relative 'lib/behaviors'
 
-class Npc < GameObject
+class ActorFleer < GameObject
   attr_reader :id
   attr_reader :steering   # for debugging
 
@@ -20,13 +20,10 @@ class Npc < GameObject
   def setup
     @id = SecureRandom.uuid
 
-    @red = Color.new(0xffff0000)
-    @white = Color.new(0xffffffff)
-
     @image = Image["Starfighter.bmp"]
     @ouched = false
 
-    self.factor = 0.7
+    self.factor = 0.4
     self.rotation_center = :center
 
     @heading = Vector2d.new(0,0)
@@ -39,7 +36,9 @@ class Npc < GameObject
 
     @steering = Behaviors.new(self)
     @steering.add_behavior(:avoid_edges)
-    @steering.add_behavior(:flee, Vector2d.new(@x+(rand*100-51),@y+(rand*100-51)))
+
+    @target = Vector2d.new(@x+(rand*100-51),@y+(rand*100-51))
+    @steering.add_behavior(:flee, @target)
 
     cache_bounding_box
   end
@@ -47,8 +46,19 @@ class Npc < GameObject
   def position
     Vector2d.new(self.x, self.y)
   end
+
   def velocity
     Vector2d.new(self.velocity_x, self.velocity_y)
+  end
+
+  def draw
+    super
+
+    if @target && DEBUG
+      @crosshair ||= Gosu::Image.new($window, "media/crosshair.png", true)
+      @crosshair.draw(@target.x-7.5, @target.y-7.5, 500, 0.5, 0.5, COLORS[:white])
+      $window.draw_line(x,y,COLORS[:white], @target.x, @target.y, COLORS[:red])
+    end
   end
 
   def update
@@ -59,7 +69,8 @@ class Npc < GameObject
     if @counter >= @change_point
       @counter = 1
       @change_point = rand*60
-      @steering.add_behavior(:flee, Vector2d.new(@x+(rand*100-51),@y+(rand*100-51)))
+      @target = Vector2d.new(@x+(rand*100-51),@y+(rand*100-51))
+      @steering.add_behavior(:flee, @target)
     end
 
     elapsed_ms = ms_since_last_update
@@ -114,15 +125,15 @@ class Npc < GameObject
     @ouched = false if @ouched == true
 
     if @ouched
-      self.color = @red
+      self.color = COLORS[:red]
     else
-      self.color = @white
+      self.color = COLORS[:white]
     end
   end
 
   def list_nearby_npcs
     arr = []
-    Npc.all.each do |e|
+    ActorFleer.all.each do |e|
       if in_circle(self.x, self.y, 2*width, e.x, e.y) && e != self
         arr << e
       end
