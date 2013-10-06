@@ -1,6 +1,7 @@
 
 POSSIBLE_BEHAVIORS = {:flee => :target_place,
                       :seek => :target_place,
+                      :follow => :target_actor,
                       :avoid_edges => :none}
 
 
@@ -32,6 +33,12 @@ class Behaviors
     desired_velocity - @actor.velocity
   end
 
+  # Follow a target actor
+  def velocity_change_to_follow(target_actor)
+    v = Vector2d.new(target_actor.x, target_actor.y)
+    velocity_change_to_seek v
+  end
+
   # Avoid the edge of the viewport
   def velocity_change_to_avoid_edges
     @buffer = 100
@@ -46,8 +53,8 @@ class Behaviors
       y = 0 if position.y <= 0 + @buffer
       y = $window.height if position.y >= $window.height - @buffer
 
-      point_along_edge = Vector2d.new(x,y)
-      velocity_change_to_flee(point_along_edge)
+      window_center = Vector2d.new($window.width/2, $window.height/2)
+      velocity_change_to_seek(window_center)
     else
       Vector2d.new(0,0)
     end
@@ -64,6 +71,10 @@ class Behaviors
 
     if (not @active_behaviors[:seek].nil?) && @active_behaviors[:seek]!=:none
       force += velocity_change_to_seek(@active_behaviors[:seek])
+    end
+
+    if (not @active_behaviors[:follow].nil?) && @active_behaviors[:follow]!=:none
+      force += velocity_change_to_follow(@active_behaviors[:follow])
     end
 
     unless @active_behaviors[:avoid_edges].nil?
