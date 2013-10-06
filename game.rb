@@ -8,14 +8,7 @@ require_relative 'actor_seeker'
 require_relative 'actor_fleer'
 require_relative 'player'
 
-COLORS = {:red => Color.new(0xffff0000),
-          :white => Color.new(0xffffffff),
-          :blue => Color.new(0xff0000ff),
-          :green => Color.new(0xffff6600),
-          :orange => Color.new(0xff0033ff)
-}
-
-DEBUG = true
+DEBUG = false
 
 class Game < Chingu::Window
   def initialize
@@ -23,32 +16,43 @@ class Game < Chingu::Window
     self.input = {:esc => :exit}
 
     self.factor = 1
-    5.times { ActorSeeker.create(:x => width/(rand * 10), :y => height/(rand * 10)) }
-    5.times { ActorFleer.create(:x => width/(rand * 10), :y => height/(rand * 10)) }
-    1.times { Player.create(:x => width/3, :y => height/3) }
+    100.times { ActorSeeker.create(:x => random_x, :y => random_y) }
+    #5.times { ActorFleer.create(:x => random_x, :y => random_x) }
+    1.times { Player.create(:x => random_x, :y => random_x) }
 
+    Player.all.each do |e|
+      puts "p: #{e}"
+    end
     ActorFleer.all.each do |e|
-      puts "w: #{e}"
+      puts "f: #{e}"
       puts "#{e.steering.active_behaviors}"
     end
     ActorSeeker.all.each do |e|
-      puts "S: #{e}"
+      puts "s: #{e}"
       puts "#{e.steering.active_behaviors}"
     end
+  end
+
+  def random_x
+    (rand*(self.width-100))+50
+  end
+  def random_y
+    (rand*(self.height-100))+50
   end
 
   def update
     super
     self.caption = "Game Experiment - FPS: #{fps}, Objects: #{game_objects.size}"
 
-    ActorFleer.each_collision(ActorFleer, Player) do |m, o|
-      m.color = COLORS[:red]
-      m.bonk
+    Actor.each_collision(Actor, Player) do |m, o|
+      collide m
     end
-    ActorSeeker.each_collision(ActorSeeker, Player) do |m, o|
-      m.color = COLORS[:red]
-      m.bonk
-    end
+  end
+
+  def collide this_one
+    this_one.color = Gosu::Color::RED
+    this_one.bonk
+    this_one.destroy
   end
 end
 

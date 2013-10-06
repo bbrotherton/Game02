@@ -8,7 +8,7 @@ class Player < GameObject
 #    self.velocity_y = rand * 5
 
     self.rotation_center = :center
-    self.color = @blue
+    self.color = Gosu::Color::BLUE
 
     self.input = [:holding_left, :holding_right, :holding_down, :holding_up]  # NOTE: giving input an Array, not a Hash
     @ouched = false
@@ -30,12 +30,16 @@ class Player < GameObject
   end
 
   def update
+    manage_collision_highlight
+  end
+
+  def manage_collision_highlight
     @ouched = false if @ouched == true
 
     if @ouched
-      self.color = COLORS[:red]
+      self.color = Gosu::Color::RED
     else
-      self.color = COLORS[:green]
+      self.color = Gosu::Color::BLUE
     end
   end
 
