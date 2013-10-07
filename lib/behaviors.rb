@@ -3,6 +3,7 @@ POSSIBLE_BEHAVIORS = {:flee => :target_point,
                       :seek => :target_point,
                       :follow => :target_actor,
                       :follow_path => :waypoint_array,
+                      :flock => :array_of_members,
                       :avoid_edges => :none}
 
 
@@ -77,6 +78,11 @@ class Behaviors
     end
   end
 
+  # Stay with the flock
+  def velocity_change_to_flock(array_of_members)
+    velocity_change_to_seek(Vector2d.new(rand(400), rand(400)))
+  end
+
 
 
   # Calculate the steering force acting on the agent
@@ -97,6 +103,10 @@ class Behaviors
 
     if (not @active_behaviors[:follow].nil?) && @active_behaviors[:follow]!=:none
       force += velocity_change_to_follow(@active_behaviors[:follow])
+    end
+
+    unless @active_behaviors[:flock].nil?
+      force += velocity_change_to_flock([])
     end
 
     unless @active_behaviors[:avoid_edges].nil?

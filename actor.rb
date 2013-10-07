@@ -105,22 +105,7 @@ class Actor < GameObject
     end
   end
 
-  def list_nearby_npcs
-    arr = []
-    ActorFleer.all.each do |e|
-      if in_circle(self.x, self.y, 2*width, e.x, e.y) && e != self
-        arr << e
-      end
-    end
-    puts "#{self.id} - #{arr}"
-  end
-
   def bonk
     @ouched = true
-  end
-
-  def in_circle(center_x, center_y, radius, x, y)
-    square_dist = (center_x - x) ** 2 + (center_y - y) ** 2
-    square_dist <= radius ** 2
   end
 end

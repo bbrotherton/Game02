@@ -4,9 +4,8 @@ require 'chingu'
 include Gosu
 include Chingu
 
-require_relative 'actor_seeker'
-require_relative 'actor_follower'
 require_relative 'actor_pathfollower'
+require_relative 'actor_flock'
 require_relative 'player'
 
 DEBUG = true
@@ -18,27 +17,18 @@ class GameFlock < Chingu::Window
 
     self.factor = 1
     @player = Player.create(:x => random_x, :y => random_y)
-#    1.times { ActorSeeker.create(:x => random_x, :y => random_y) }
 
 #    @t = ActorSeeker.all[0]
 #    2.times { ActorFollower.create(:x => random_x, :y => random_y, :leader => @t) }
 
-    ActorPathFollower.create(:x => random_x, :y => random_y)
+#    ActorPathFollower.create(:x => random_x, :y => random_y)
+    20.times { ActorFlock.create(:x => random_x, :y => random_y, :members => ActorFlock.all) }
 
-    Player.all.each do |e|
-      puts "U: #{e}"
-    end
-    ActorSeeker.all.each do |e|
-      puts "s: #{e}"
-      puts "#{e.steering.active_behaviors}"
-    end
-    ActorFollower.all.each do |e|
-      puts "F: #{e}"
-      puts "#{e.steering.active_behaviors}"
-    end
-    ActorPathFollower.all.each do |e|
-      puts "p: #{e}"
-      puts "#{e.steering.active_behaviors}"
+    puts "p: #{Player.all[0]}"
+
+    game_objects.of_class(Actor).each do |a|
+      puts a
+      puts "  #{a.steering.active_behaviors}"
     end
   end
 
@@ -53,7 +43,7 @@ class GameFlock < Chingu::Window
     super
     self.caption = "Game Experiment - FPS: #{fps}, Objects: #{game_objects.size}"
 
-    [ActorSeeker, ActorFollower].each_collision(ActorSeeker, ActorFollower)  { |a1, a2| collide(a1) }
+    [ActorPathFollower, ActorFlock].each_collision(ActorPathFollower, ActorFlock)  { |a1, a2| collide(a1) }
 #    Player.each_collision(, ActorSeeker, ActorFollower) { |p, a| destroy(a) }
   end
 
