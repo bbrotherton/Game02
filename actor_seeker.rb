@@ -10,7 +10,7 @@ class ActorSeeker < Actor
   def setup
     super
 
-    @steering.add_behavior(:seek, Vector2d.new(@x+(rand*100-51),@y+(rand*100-51)))
+    @steering.add_behavior(:seek, Vector2d.new(random_x,random_y))
   end
 
   def draw
@@ -32,12 +32,12 @@ class ActorSeeker < Actor
   def change_target
 #    @target = Vector2d.new(Player.all[0].x, Player.all[0].y)
     if @change_point.nil?
-      @change_point = rand*60
+      @change_point = rand*120
     end
     @counter = 1 + (@counter || 1)
     if @counter >= @change_point
       @counter = 1
-      @change_point = rand*60
+      @change_point = rand*120
       @target = Vector2d.new(random_x, random_y)
       @steering.add_behavior(:seek, @target)
     end

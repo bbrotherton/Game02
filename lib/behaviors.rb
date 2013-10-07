@@ -1,7 +1,8 @@
 
-POSSIBLE_BEHAVIORS = {:flee => :target_place,
-                      :seek => :target_place,
+POSSIBLE_BEHAVIORS = {:flee => :target_point,
+                      :seek => :target_point,
                       :follow => :target_actor,
+                      :follow_path => :waypoint_array,
                       :avoid_edges => :none}
 
 
@@ -22,14 +23,14 @@ class Behaviors
   end
 
   # Flee from a target location
-  def velocity_change_to_flee(target_place)
-    desired_velocity = (@actor.position - target_place).normalize * @actor.max_speed
+  def velocity_change_to_flee(target_point)
+    desired_velocity = (@actor.position - target_point).normalize * @actor.max_speed
     desired_velocity - @actor.velocity
   end
 
   # Seek a target location
-  def velocity_change_to_seek(target_place)
-    desired_velocity = (target_place - @actor.position).normalize * @actor.max_speed
+  def velocity_change_to_seek(target_point)
+    desired_velocity = (target_point - @actor.position).normalize * @actor.max_speed
     desired_velocity - @actor.velocity
   end
 
@@ -54,16 +55,37 @@ class Behaviors
       y = $window.height if position.y >= $window.height - @buffer
 
       window_center = Vector2d.new($window.width/2, $window.height/2)
-      velocity_change_to_seek(window_center)
+      velocity_change_to_seek window_center
     else
       Vector2d.new(0,0)
     end
   end
 
+  # Go to the next waypoint
+  def velocity_change_to_waypoint(waypoint_array)
+    if waypoint_array.nil? || waypoint_array.length < 1
+      Vector2d.new(0,0)
+    else
+      @index ||= 0
+
+      if (@actor.position - waypoint_array[@index]).length.abs <= (@actor.height+@actor.width)
+        @index += 1
+        @index = 0 if @index >= waypoint_array.length
+      end
+
+        velocity_change_to_seek waypoint_array[@index]
+    end
+  end
+
+
 
   # Calculate the steering force acting on the agent
   def force
     force = Vector2d.new(0,0)
+
+    if (not @active_behaviors[:follow_path].nil?) && @active_behaviors[:follow_path]!=:none
+      force += velocity_change_to_waypoint(@active_behaviors[:follow_path])
+    end
 
     if (not @active_behaviors[:flee].nil?) && @active_behaviors[:flee]!=:none
       force += velocity_change_to_flee(@active_behaviors[:flee])
