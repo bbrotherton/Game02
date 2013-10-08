@@ -30,11 +30,4 @@ class ActorFlock < Actor
   def join_flock member_array
     @steering.add_behavior(:flock, member_array)
   end
-
-  def random_x
-    (rand*($window.width-100))+50
-  end
-  def random_y
-    (rand*($window.height-100))+50
-  end
 end

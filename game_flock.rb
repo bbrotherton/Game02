@@ -38,13 +38,6 @@ class GameFlock < Chingu::Window
     end
   end
 
-  def random_x
-    (rand*(self.width-200))+100
-  end
-  def random_y
-    (rand*(self.height-200))+100
-  end
-
   def update
     super
     self.caption = "Game Experiment - FPS: #{fps}, Objects: #{game_objects.size}"
@@ -61,6 +54,15 @@ class GameFlock < Chingu::Window
   def destroy this_one
     this_one.destroy
   end
+
+  def random_x
+    (rand(self.width-200))+100
+  end
+
+  def random_y
+    (rand(self.height-200))+100
+  end
+
 end
 
 

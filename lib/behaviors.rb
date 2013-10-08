@@ -89,7 +89,7 @@ class Behaviors
       end
     end
 
-    if separation_vector == Vector2d.new(0,0)
+    if separation_vector.x == 0 && separation_vector.y == 0
       velocity_change_to_seek(Vector2d.new(rand(400), rand(400)))
     else
       separation_vector
