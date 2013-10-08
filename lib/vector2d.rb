@@ -48,10 +48,14 @@ class Vector2d
     end
   end
 
+  def ==(v)
+    @x == v.x && @y == v.y
+  end
+
   def +(v)
     Vector2d.new(@x + v.x, @y + v.y)
   end
-  
+
   def /(n)
     Vector2d.new(@x/n, @y/n)
   end

@@ -13,7 +13,7 @@ DEBUG = true
 class GameFlock < Chingu::Window
   def initialize
     super(800,600)
-    self.input = {:esc => :exit}
+    self.input = {:esc => :exit, :backspace => :print_status}
 
     self.factor = 1
     @player = Player.create(:x => random_x, :y => random_y)
@@ -22,13 +22,19 @@ class GameFlock < Chingu::Window
 #    2.times { ActorFollower.create(:x => random_x, :y => random_y, :leader => @t) }
 
 #    ActorPathFollower.create(:x => random_x, :y => random_y)
-    20.times { ActorFlock.create(:x => random_x, :y => random_y, :members => ActorFlock.all) }
+    20.times { ActorFlock.create(:x => random_x, :y => random_y) }
+    ActorFlock.all.each { |a| a.join_flock(ActorFlock.all) }
 
     puts "p: #{Player.all[0]}"
 
+    print_status
+  end
+
+  def print_status
     game_objects.of_class(Actor).each do |a|
       puts a
       puts "  #{a.steering.active_behaviors}"
+      puts "  #{a.steering.active_behaviors[:flock].length}"
     end
   end
 
@@ -51,6 +57,7 @@ class GameFlock < Chingu::Window
     this_one.color = Gosu::Color::RED
     this_one.bonk
   end
+
   def destroy this_one
     this_one.destroy
   end

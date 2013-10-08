@@ -80,9 +80,37 @@ class Behaviors
 
   # Stay with the flock
   def velocity_change_to_flock(array_of_members)
-    velocity_change_to_seek(Vector2d.new(rand(400), rand(400)))
+    separation_vector = Vector2d.new(0,0)
+    array_of_members.each do |e|
+      if e != @actor && in_sight(3*@actor.width, e)
+        if too_close? e
+          separation_vector += velocity_change_to_flee(e.position)
+        end
+      end
+    end
+
+    if separation_vector == Vector2d.new(0,0)
+      velocity_change_to_seek(Vector2d.new(rand(400), rand(400)))
+    else
+      separation_vector
+    end
   end
 
+  def in_sight(radius, other)
+    if (@actor.position - other.position).length.abs > radius
+      return false # far enough away
+    end
+
+    direction = @actor.velocity.normalize
+    difference = other.position - @actor.position
+    dot_prod = difference.dot(direction)
+
+    dot_prod >= 0
+  end
+
+  def too_close? other
+    (@actor.position - other.position).length.abs <= (@actor.width + other.width) * 1.5
+  end
 
 
   # Calculate the steering force acting on the agent
@@ -105,8 +133,8 @@ class Behaviors
       force += velocity_change_to_follow(@active_behaviors[:follow])
     end
 
-    unless @active_behaviors[:flock].nil?
-      force += velocity_change_to_flock([])
+    unless @active_behaviors[:flock].nil? && @active_behaviors[:flock]!=:none
+      force += velocity_change_to_flock(@active_behaviors[:flock])
     end
 
     unless @active_behaviors[:avoid_edges].nil?
